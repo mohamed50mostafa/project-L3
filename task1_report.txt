@@ -1,0 +1,126 @@
+Question 1: How much is each member borrowing?
+A per-member count of checkouts, including members who have not borrowed any books yet.
+SQL Query:
+
+SELECT
+m.member_id,
+m.first_name,
+m.last_name,
+COUNT(c.checkout_id) AS total_checkouts
+FROM members m
+LEFT JOIN checkouts c ON m.member_id = c.member_id
+GROUP BY m.member_id, m.first_name, m.last_name
+ORDER BY total_checkouts DESC;
+
+-------------------------------------------------------------------------------------
+
+Results Overview:
+The query returns all 80 members. Top borrowers include Aya Wahba (25 checkouts) and Sherif Saleh (21 checkouts), Members with 0 checkouts (Layla Fouad, Fares Sabry) are also included and thanks to the LEFT JOIN.
+
+-------------------------------------------------------------------------------------
+
+Question 2: Which books match a chosen author pattern?
+Searching the catalog based on an author's name pattern ('Samir').
+
+SQL Query:
+SELECT
+book_id,
+title,
+author
+FROM books
+WHERE author LIKE '%Samir%';
+
+-------------------------------------------------------------------------------------
+
+Results:Book ID 531 Voices in the Library by Samir Zohdy, Book ID 532 is The Last Bookmark by Samir Zohdy.
+
+-------------------------------------------------------------------------------------
+
+Question 3: What are the most popular books?
+The 5 most-borrowed titles ranked by total checkouts.
+
+SQL Query:
+SELECT
+b.book_id,
+b.title,
+COUNT(c.checkout_id) AS checkout_count
+FROM books b
+JOIN checkouts c ON b.book_id = c.book_id
+GROUP BY b.book_id, b.title
+ORDER BY checkout_count DESC
+LIMIT 5;
+
+-------------------------------------------------------------------------------------
+
+Results:
+1.The Silver Kite (57 checkouts)
+2.Fossils and Fireflies (55 checkouts)
+3.Circuits for Beginners (46 checkouts)
+4.Kites Over Cairo (38 checkouts)
+5.Storms and Sailboats (25 checkouts)
+
+-------------------------------------------------------------------------------------
+
+Question 4: Who are the most active readers?
+The top 10 members who have borrowed the most books.
+
+SQL Query:
+SELECT
+m.member_id,
+m.first_name,
+m.last_name,
+COUNT(c.checkout_id) AS total_checkouts
+FROM members m
+JOIN checkouts c ON m.member_id = c.member_id
+GROUP BY m.member_id, m.first_name, m.last_name
+ORDER BY total_checkouts DESC
+LIMIT 10;
+
+-------------------------------------------------------------------------------------
+
+Results:
+1.Aya Wahba (25)
+2.Sherif Saleh (21)
+3.Ziad Saleh (19)
+4.Nour Nabil (18)
+5.Mostafa Fouad (18)
+6.Ahmed Shafik (17)
+7.Youssef Hegazy (17)
+8.Adam Fahmy (17)
+9.Reem Osman (16)
+10.Sara Rashad (16)
+
+-------------------------------------------------------------------------------------
+
+Question 5: What does a neighborhood's activity look like further back in time?
+Checkouts for 'Zamalek', ordered newest to oldest, skipping the 10 most recent records.
+
+SQL Query:
+SELECT
+c.checkout_id,
+c.member_id,
+c.book_id,
+c.checkout_date,
+m.neighborhood
+FROM checkouts c
+JOIN members m ON c.member_id = m.member_id
+WHERE m.neighborhood = 'Zamalek'
+ORDER BY c.checkout_date DESC
+LIMIT -1 OFFSET 10;
+
+-------------------------------------------------------------------------------------
+
+Results Overview:
+Returns historical checkouts starting after the 10th most recent record (from March 9, 2025 back to January 2024).
+
+-------------------------------------------------------------------------------------
+
+
+
+REFLECTION - WEB PAGES VS. STRUCTURED DATABASES / APIS
+1.Structure and Reliability:
+    Databases and APIs are designed specifically for software consumption, They store data in rigid schemas with predictable column names, data types, and primary/foreign keys but Web pages are designed for human visual presentation and Extracting your tabular data from HTML (using tools like pd.read_html) relies on structural assumptions (like <table> tags) that can easily break if the site's layout changes.
+2.Integration & Data Cleaning Challenges:
+    The database tables provided complete checkout records with explicit IDs and dates while The Reading Kickoff web table only contained basic signup columns (Member ID, Book ID, Checkout Date). To unify both datasets into a single schema, we had to clean the web column names (handling spaces and capitalizations).
+3.Impact on Data Pipelines:
+    In real-world data pipelines, relying on scraped web pages introduces fragility. Small front-end design updates can cause data errors while Databases and APIs remain the gold standard for reliable automated pipelines,so web data requires careful validation, cleaning, and schema mapping before integration.
